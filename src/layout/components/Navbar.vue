@@ -13,7 +13,7 @@
         <div class="avatar-wrapper">
           <!-- 头像 -->
           <img v-if="avatar" :src="avatar" class="user-avatar">
-          <span v-else class="username">{{ name?.chatAt(0) }}</span>
+          <span v-else class="username">{{ name?.charAt(0) }}</span>
           <!-- 用户名称 -->
           <span class="name">{{ name }}</span>
           <i class="el-icon-setting" />
@@ -22,16 +22,10 @@
           <router-link to="/">
             <el-dropdown-item> 首页 </el-dropdown-item>
           </router-link>
-          <a
-            target="_blank"
-            href="https://github.com/fyjiayou/heimahr"
-          >
+          <a target="_blank" href="https://github.com/fyjiayou/heimahr">
             <el-dropdown-item>项目地址</el-dropdown-item>
           </a>
-          <a
-            target="_blank"
-            href="https://panjiachen.github.io/vue-element-admin-site/#/"
-          >
+          <a target="_blank" @click.prevent="oepnDialog">
             <el-dropdown-item>修改密码</el-dropdown-item>
           </a>
           <!-- native事件修饰符 -->
@@ -42,6 +36,38 @@
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+    <!-- 放置dialog -->
+    <!-- sync可以接收子组件传过来的事件和值 -->
+    <el-dialog
+      title="修改密码"
+      :visible.sync="showDialog"
+      width="30%"
+      append-to-body
+      :before-close="handleClose"
+      @close="cancelChange"
+    >
+      <el-form
+        ref="changePwdForm"
+        :model="editPwdObj"
+        :rules="editPwdRules"
+        label-width="120px"
+      >
+        <el-form-item label="旧密码" prop="oldPassword">
+          <el-input v-model="editPwdObj.oldPassword" show-password size="small" />
+        </el-form-item>
+        <el-form-item label="新密码" prop="newPassword">
+          <el-input v-model="editPwdObj.newPassword" show-password size="small" />
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmNewPassword">
+          <el-input v-model="editPwdObj.confirmNewPassword" show-password size="small" />
+        </el-form-item>
+        <el-form-item>
+          <el-button size="mini" @click="cancelChange">取 消</el-button>
+          <el-button size="mini" type="primary" @click="changePwd">确认修改</el-button>
+        </el-form-item>
+      </el-form>
+    </el-dialog>
   </div>
 </template>
 
@@ -49,11 +75,44 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import { updatePwd } from '@/api/user'
 
 export default {
   components: {
     Breadcrumb,
     Hamburger
+  },
+  data() {
+    return {
+      showDialog: false,
+      editPwdObj: {
+        oldPassword: '',
+        newPassword: '',
+        confirmNewPassword: ''
+      },
+      editPwdRules: {
+        oldPassword: [
+          { required: true, message: '原密码不能为空', trigger: 'blur' }
+        ],
+        newPassword: [
+          { required: true, message: '新密码不能为空', trigger: 'blur' },
+          {
+            min: 6,
+            max: 16,
+            message: '新密码长度应该为6-16位之间',
+            trigger: 'blur'
+          }
+        ],
+        confirmNewPassword: [
+          { required: true, message: '重复密码不能为空', trigger: 'blur' },
+          {
+            validator: (rule, value, callback) => {
+              value === this.editPwdObj.newPassword ? callback() : callback(new Error('两次输入的密码不一致'))
+            }
+          }
+        ]
+      }
+    }
   },
   computed: {
     ...mapGetters(['sidebar', 'avatar', 'name'])
@@ -65,6 +124,23 @@ export default {
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+    },
+    oepnDialog() {
+      this.showDialog = true
+    },
+    cancelChange() {
+      this.$refs.changePwdForm.resetFields()
+      this.showDialog = false
+    },
+    changePwd() {
+      this.$refs.changePwdForm.validate(async isOk => {
+        if (isOk) {
+          // 调用接口
+          await updatePwd(this.editPwdObj)
+          this.$message.success('修改密码成功')
+          this.cancelChange()
+        }
+      })
     }
   }
 }
@@ -130,7 +206,7 @@ export default {
         position: relative;
         display: flex;
         align-items: center;
-        .username{
+        .username {
           width: 30px;
           height: 30px;
           line-height: 30px;

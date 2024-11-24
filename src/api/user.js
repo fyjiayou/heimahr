@@ -15,9 +15,10 @@ export function getUserInfo() {
   })
 }
 
-export function logout() {
+export function updatePwd(data) {
   return request({
-    url: '/vue-admin-template/user/logout',
-    method: 'post'
+    url: '/sys/user/updatePass',
+    method: 'put',
+    data
   })
 }
