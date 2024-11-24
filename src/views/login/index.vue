@@ -5,18 +5,33 @@
       <h1>登录</h1>
       <el-card shadow="never" class="login-card">
         <!--登录表单-->
-        <el-form ref="form" :model="loginForm" :rules="loginRules" autocomplete="off">
+        <el-form
+          ref="form"
+          :model="loginForm"
+          :rules="loginRules"
+          autocomplete="off"
+        >
           <el-form-item prop="mobile">
             <el-input v-model="loginForm.mobile" placeholder="请输入手机号" />
           </el-form-item>
           <el-form-item prop="password">
-            <el-input v-model="loginForm.password" show-password placeholder="请输入密码" />
+            <el-input
+              v-model="loginForm.password"
+              show-password
+              placeholder="请输入密码"
+            />
           </el-form-item>
           <el-form-item prop="isAgree">
-            <el-checkbox v-model="loginForm.isAgree">用户平台使用协议</el-checkbox>
+            <el-checkbox
+              v-model="loginForm.isAgree"
+            >用户平台使用协议</el-checkbox>
           </el-form-item>
           <el-form-item>
-            <el-button style="width:350px" type="primary" @click="login">登录</el-button>
+            <el-button
+              style="width: 350px"
+              type="primary"
+              @click="login"
+            >登录</el-button>
           </el-form-item>
         </el-form>
       </el-card>
@@ -29,34 +44,52 @@ export default {
   data() {
     return {
       loginForm: {
-        mobile: '',
-        password: '',
-        isAgree: false
+        mobile: process.env.NODE_ENV === 'development' ? '13800000002' : '',
+        password: process.env.NODE_ENV === 'development' ? 'hm#qd@23!' : '',
+        isAgree: process.env.NODE_ENV === 'development'
       },
       loginRules: {
         mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
-          { pattern: /^1[3-9]\d{9}$/, message: '手机号格式错误', trigger: 'blur' }
+          {
+            pattern: /^1[3-9]\d{9}$/,
+            message: '手机号格式错误',
+            trigger: 'blur'
+          }
         ],
         password: [
           { required: true, message: '请输入密码', trigger: 'blur' },
-          { min: 6, max: 16, message: '密码长度应该为6-16位之间', trigger: 'blur' }
-        ],
-        isAgree: [{
-          // required只能检测 null undefined ''
-          // rule校验规则   value校验的值   callback函数 -promise resolve reject
-          validator: (rule, value, callback) => {
-            value ? callback() : callback(new Error('您必须勾选用户使用协议'))
+          {
+            min: 6,
+            max: 16,
+            message: '密码长度应该为6-16位之间',
+            trigger: 'blur'
           }
-        }]
+        ],
+        isAgree: [
+          {
+            // required只能检测 null undefined ''
+            // rule校验规则   value校验的值   callback函数 -promise resolve reject
+            validator: (rule, value, callback) => {
+              value
+                ? callback()
+                : callback(new Error('您必须勾选用户使用协议'))
+            }
+          }
+        ]
       }
     }
   },
   methods: {
     login() {
-      this.$refs.form.validate((isOk) => {
+      this.$refs.form.validate(async(isOk) => {
         if (isOk) {
-          alert('校验通过')
+          // alert('校验通过')
+          await this.$store.dispatch('user/login', this.loginForm)
+          // Vuex中的action返回的是promise
+          this.$message.success('登陆成功')
+          // 跳转主页
+          this.$router.push('/')
         }
       })
     }
