@@ -44,7 +44,6 @@
       :visible.sync="showDialog"
       width="30%"
       append-to-body
-      :before-close="handleClose"
       @close="cancelChange"
     >
       <el-form
