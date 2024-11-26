@@ -1,11 +1,8 @@
 import request from '@/utils/request'
 
-export function getRoleList() {
+export function getRoleList(params) {
   return request({
     url: '/sys/role',
-    params: {
-      page: 1,
-      pagesize: 5
-    }
+    params
   })
 }

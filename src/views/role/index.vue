@@ -27,7 +27,10 @@
       <el-row type="flex" justify="end" style="height:60px" align="middle">
         <el-pagination
           layout="prev, pager, next"
-          :total="total"
+          :total="pageParams.total"
+          :page-size="pageParams.pagesize"
+          :current-page="pageParams.page"
+          @current-change="changePage"
         />
       </el-row>
     </div>
@@ -39,8 +42,13 @@ export default {
   name: 'Role',
   data() {
     return {
-      total: 10,
-      list: []
+      list: [],
+      pageParams: {
+        page: 1,
+        pagesize: 6,
+        total: 0
+      }
+
     }
   },
   created() {
@@ -48,9 +56,14 @@ export default {
   },
   methods: {
     async getRoleList() {
-      const { rows, total } = await getRoleList()
-      this.total = total
+      const { rows, total } = await getRoleList(this.pageParams)
+      console.log('总条数：', total)
+      this.pageParams.total = total
       this.list = rows
+    },
+    changePage(newPage) {
+      this.pageParams.page = newPage
+      this.getRoleList()
     }
   }
 }
