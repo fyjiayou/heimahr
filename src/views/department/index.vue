@@ -2,11 +2,16 @@
   <div class="container">
     <div class="app-container">
       <!-- 展示属性结构 -->
-      <el-tree :expand-on-click-node="false" default-expand-all :data="depts" :props="defaultProps">
+      <el-tree
+        :expand-on-click-node="false"
+        default-expand-all
+        :data="depts"
+        :props="defaultProps"
+      >
         <!-- 节点结构 -->
         <!-- 使用 scoped slot 会传入两个参数node和data，分别表示当前节点的 Node 对象和当前节点的数据。 -->
         <!-- v-slot="{node ,data}" 只能作用在template标签 -->
-        <template v-slot="{data}">
+        <template v-slot="{ data }">
           <el-row
             style="width: 100%; height: 40px"
             type="flex"
@@ -17,7 +22,7 @@
             <el-col :span="8">
               <span class="tree-manager">{{ data.managerName }}</span>
               <!-- $event 实参。表示类型 -->
-              <el-dropdown @command="operateDept($event,data.id)">
+              <el-dropdown @command="operateDept($event, data.id)">
                 <!-- 显示区域内容 -->
                 <span class="el-dropdown-link">
                   操作<i class="el-icon-arrow-down el-icon--right" />
@@ -31,13 +36,13 @@
             </el-col>
           </el-row>
         </template>
-
       </el-tree>
     </div>
 
     <!-- 放置弹层组件 -->
     <!-- .sync表示会接收子组件的事件 update:showDialog, 值 ==> 属性 -->
     <add-dept
+      ref="addDept"
       :current-node-id="currentNodeId"
       :show-dialog.sync="showDialog"
       @updateDepartment="getDepartment"
@@ -45,7 +50,7 @@
   </div>
 </template>
 <script>
-import { getDeptList } from '@/api/department'
+import { delDept, getDeptList } from '@/api/department'
 import { transList2TreeData } from '@/utils'
 import addDept from './components/add-dept.vue'
 export default {
@@ -62,14 +67,13 @@ export default {
       },
       showDialog: false,
       currentNodeId: null
-
     }
   },
   created() {
     this.getDepartment()
   },
   methods: {
-    async  getDepartment() {
+    async getDepartment() {
       const res = await getDeptList()
       this.depts = transList2TreeData(res, 0)
     },
@@ -77,9 +81,26 @@ export default {
       if (type === 'add') {
         this.showDialog = true
         this.currentNodeId = id
+      } else if (type === 'edit') {
+        this.showDialog = true
+        this.currentNodeId = id
+        // 要在子组件获取数据
+        // 父组件调用子组件的方法获取数据
+        this.$nextTick(() => {
+          this.$refs.addDept.getDepartmentDetail() // this.$refs.addDept等同于子组件的this
+        })
+      } else {
+        this.$confirm('您是否要删除该部门?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(async() => {
+          await delDept(this.currentNodeId)
+          this.$message.success('删除成功!')
+          this.getDepartment()
+        })
       }
     }
-
   }
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
   <el-dialog
-    title="新增部门"
+    :title="showTitle"
     :visible="showDialog"
     width="30%"
     @close="closeDialog"
@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import { getDeptList, getDeptMangerList, saveDept } from '@/api/department'
+import { getDeptList, getDeptMangerList, saveDept, getDeptDetail, updateDept } from '@/api/department'
 export default {
   props: {
     showDialog: {
@@ -89,7 +89,12 @@ export default {
           {
             trigger: 'blur',
             validator: async(rule, val, callback) => {
-              const res = await getDeptList()
+              let res = await getDeptList()
+              // 判断当前是否是编辑模式
+              console.log('id:', this.deptObj.id)
+              if (this.deptObj.id) {
+                res = res.filter(item => item.id !== this.deptObj.id)
+              }
               if (res.some(item => item.name === val)) {
                 callback(new Error('部门名称已存在'))
               } else {
@@ -104,7 +109,11 @@ export default {
           {
             trigger: 'blur',
             validator: async(rule, val, callback) => {
-              const res = await getDeptList()
+              let res = await getDeptList()
+              // 判断当前是否是编辑模式
+              if (this.deptObj.id) {
+                res = res.filter(item => item.id !== this.deptObj.id)
+              }
               if (res.some(item => item.code === val)) {
                 callback(new Error('部门编码已存在'))
               } else {
@@ -126,11 +135,23 @@ export default {
       }
     }
   },
+  computed: {
+    showTitle() {
+      return this.deptObj.id ? '编辑部门' : '新增部门'
+    }
+  },
   created() {
     this.getMangerList()
   },
   methods: {
     closeDialog() {
+      this.deptObj = {
+        code: '',
+        introduce: '',
+        managerId: '',
+        name: '',
+        pid: ''
+      }
       this.$refs.addDept.resetFields() // 重置表单
       this.$emit('update:showDialog', false) // 关闭弹层
     },
@@ -142,12 +163,19 @@ export default {
     onAddDept() {
       this.$refs.addDept.validate(async isOk => {
         if (isOk) {
-          await saveDept({ ...this.deptObj, pid: this.currentNodeId })
+          if (this.deptObj.id) {
+            await updateDept(this.deptObj)
+          } else {
+            await saveDept({ ...this.deptObj, pid: this.currentNodeId })
+          }
           this.$emit('updateDepartment')
-          this.$message.success('新增部门成功')
+          this.$message.success(this.deptObj.id ? '修改部门成功' : '新增部门成功')
           this.closeDialog()
         }
       })
+    },
+    async getDepartmentDetail() {
+      this.deptObj = await getDeptDetail(this.currentNodeId)
     }
   }
 }

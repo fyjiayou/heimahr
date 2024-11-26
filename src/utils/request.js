@@ -36,6 +36,7 @@ service.interceptors.response.use(
     return Promise.reject(new Error(message))
   },
   async error => {
+    console.log('错误响应：', error.response)
     if (error.response.status === 401) {
       Message({ type: 'warning', message: 'token超时' })
       // token超时 或 不正确

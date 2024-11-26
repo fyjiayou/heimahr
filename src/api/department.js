@@ -12,3 +12,21 @@ export function saveDept(data) {
   return request.post('/company/department', data)
 }
 
+export function getDeptDetail(id) {
+  return request.get(`/company/department/${id}`)
+}
+
+export function updateDept(deptObj) {
+  return request({
+    method: 'put',
+    url: `/company/department/${deptObj.id}`,
+    data: deptObj
+  })
+}
+
+export function delDept(id) {
+  return request({
+    method: 'delete',
+    url: `/company/department/${id}`
+  })
+}
