@@ -15,22 +15,37 @@
           align="center"
           width="200px"
           label="角色"
-        />
+        >
+          <template v-slot="{row}">
+            <el-input v-if="row.isEdit" v-model="row.editRow.name" size="mini" />
+            <span v-else>{{ row.name }}</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="state" align="center" width="200px" label="启用">
           <!-- 自定义列结构 -->
           <!-- v-slot必须作用在template标签上 -->
           <template v-slot="{ row }">
-            <span>{{
-              row.state === 1 ? "已启用" : row.state === 0 ? "未启用" : "无"
-            }}</span>
+            <el-switch v-if="row.isEdit" v-model="row.editRow.state" :active-value="1" :inactive-value="0" size="mini" />
+            <span v-else>{{ row.state === 1 ? "已启用" : row.state === 0 ? "未启用" : "无" }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" align="center" label="描述" />
+        <el-table-column prop="description" align="center" label="描述">
+          <template v-slot="{row}">
+            <el-input v-if="row.isEdit" v-model="row.editRow.description" type="textarea" size="mini" />
+            <span v-else>{{ row.description }}</span>
+          </template>
+        </el-table-column>
         <el-table-column align="center" label="操作">
-          <template>
-            <el-button size="mini" type="text">分配权限</el-button>
-            <el-button size="mini" type="text">编辑</el-button>
-            <el-button size="mini" type="text">删除</el-button>
+          <template v-slot="{row}">
+            <template v-if="!row.isEdit">
+              <el-button size="mini" type="text">分配权限</el-button>
+              <el-button size="mini" type="text" @click="onEditBtn(row)">编辑</el-button>
+              <el-button size="mini" type="text">删除</el-button>
+            </template>
+            <template v-else>
+              <el-button size="mini" type="primary" @click="editRowData(row)">确定</el-button>
+              <el-button size="mini" @click="row.isEdit = false">取消</el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -85,7 +100,7 @@
   </div>
 </template>
 <script>
-import { addRole, getRoleList } from '@/api/role'
+import { addRole, getRoleList, updateRole } from '@/api/role'
 export default {
   name: 'Role',
   data() {
@@ -117,6 +132,18 @@ export default {
       console.log('总条数：', total)
       this.pageParams.total = total
       this.list = rows
+      this.list.forEach(item => {
+        // item.isEdit = false // 添加一个属性，初始值false
+        // 数据响应式的问题 数据变化 视图更新
+        // 添加的动态属性，不具备响应式特点
+        // this.$set(目标对象,属性名称,默认值) 可以针对目标对象，添加属性，具备响应式
+        this.$set(item, 'isEdit', false)
+        this.$set(item, 'editRow', {
+          name: item.name,
+          state: item.state,
+          description: item.description
+        })
+      })
     },
     changePage(newPage) {
       this.pageParams.page = newPage
@@ -138,6 +165,31 @@ export default {
       }
       this.$refs.roleForm.resetFields()
       this.showDialog = false
+    },
+    onEditBtn(row) {
+      row.isEdit = true
+      // 更新缓存数据
+      row.editRow.name = row.name
+      row.editRow.state = row.state
+      row.editRow.description = row.description
+    },
+    async editRowData(row) {
+      console.log(row.editRow)
+      if (row.editRow.name && row.editRow.description) {
+        await updateRole({ ...row.editRow, id: row.id })
+        this.$message.success('更新角色成功')
+        // 更新显示的数据
+        // row.name = row.editRow.name
+        Object.assign(row, {
+          // name: row.editRow.name,
+          // state: row.editRow.state,
+          // description: row.editRow.description
+          ...row.editRow,
+          isEdit: false
+        }) // 规避eslint的误判
+      } else {
+        this.$message.warning('角色和描述不能为空')
+      }
     }
   }
 }
