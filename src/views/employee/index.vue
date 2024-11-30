@@ -3,11 +3,13 @@
     <div class="app-container">
       <div class="left">
         <el-input
+          v-model="queryParams.keyword"
           style="margin-bottom: 10px"
           type="text"
           prefix-icon="el-icon-search"
           size="small"
           placeholder="输入员工姓名全员搜索"
+          @input="changeVal"
         />
         <!-- 树形组件 -->
         <el-tree
@@ -127,6 +129,15 @@ export default {
       console.log(newPage)
       this.queryParams.page = newPage
       this.getEmployeeList()
+    },
+    changeVal() {
+      console.log(this.queryParams.keyword)
+      // 防抖，单位时间内只执行最后一次
+      clearTimeout(this.timer) // 清除上一次的定时器
+      this.timer = setTimeout(() => {
+        this.queryParams.page = 1
+        this.getEmployeeList()
+      }, 300)
     }
   }
 }
