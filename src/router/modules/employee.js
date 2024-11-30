@@ -1,4 +1,5 @@
 import layout from '@/layout'
+import { title } from '@/settings'
 export default {
   path: '/employee',
   component: layout,
@@ -9,6 +10,13 @@ export default {
     meta: {
       title: '员工',
       icon: 'people'
+    }
+  }, {
+    path: '/employee/detail',
+    component: () => import('@/views/employee/detail.vue'),
+    hidden: true,
+    meta: {
+      title: '员工详情'
     }
   }]
 }

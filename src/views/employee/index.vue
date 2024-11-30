@@ -25,7 +25,7 @@
       </div>
       <div class="right">
         <el-row class="opeate-tools" type="flex" justify="end">
-          <el-button size="mini" type="primary">添加员工</el-button>
+          <el-button size="mini" type="primary" @click="$router.push('/employee/detail')">添加员工</el-button>
           <el-button size="mini" @click="showExcelDialog = true">excel导入</el-button>
           <el-button size="mini" @click="exportEmployee">excel导出</el-button>
         </el-row>
@@ -50,10 +50,15 @@
           <el-table-column prop="departmentName" label="部门" />
           <el-table-column prop="timeOfEntry" label="入职时间" sortable />
           <el-table-column label="操作" width="280px">
-            <template>
+            <template v-slot="{row}">
               <el-button size="mini" type="text">查看</el-button>
               <el-button size="mini" type="text">角色</el-button>
-              <el-button size="mini" type="text">删除</el-button>
+              <el-popconfirm
+                title="这是一段内容确定删除吗？"
+                @onConfirm="confirmDel(row.id)"
+              >
+                <el-button slot="reference" style="margin-left:10px" size="mini" type="text">删除</el-button>
+              </el-popconfirm>
             </template>
           </el-table-column>
         </el-table>
@@ -76,7 +81,7 @@
 <script>
 import { getDeptList } from '@/api/department'
 import { transList2TreeData } from '@/utils'
-import { exportEmployee, getEmployeeList } from '@/api/employee'
+import { delEmployee, exportEmployee, getEmployeeList } from '@/api/employee'
 import FileSaver from 'file-saver'
 import ImportExcel from './components/import-excel.vue'
 export default {
@@ -148,6 +153,15 @@ export default {
     async exportEmployee() {
       const res = await exportEmployee()
       FileSaver.saveAs(res, '员工信息表.xlsx')
+    },
+    async confirmDel(id) {
+      console.log(id)
+      await delEmployee(id)
+      if (this.list.length === 1 && this.queryParams.page > 1) {
+        this.queryParams.page--
+      }
+      this.getEmployeeList()
+      this.$message.success('删除成功')
     }
   }
 }
