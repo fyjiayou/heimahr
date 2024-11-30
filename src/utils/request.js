@@ -6,7 +6,7 @@ import router from '@/router'
 // 创建一个新的axios实例
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // 基础地址
-  timeout: 5000 // 超时时间
+  timeout: 20000 // 超时时间
 })
 
 // 请求拦截器
@@ -27,7 +27,10 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   resp => {
-    console.log(resp.data)
+    // resp.data 默认json格式
+    if (resp.data instanceof Blob) {
+      return resp.data
+    }
     const { data, message, success } = resp.data
     if (success) {
       return data
