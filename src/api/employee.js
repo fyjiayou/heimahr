@@ -41,3 +41,11 @@ export function delEmployee(id) {
     method: 'delete'
   })
 }
+
+export function addEmployee(data) {
+  return request({
+    url: '/sys/user',
+    method: 'post',
+    data
+  })
+}

@@ -122,7 +122,9 @@ export function transList2TreeData(data, rootVal) {
     if (rootVal === item.pid) {
       arr.push(item)
       const children = transList2TreeData(data, item.id)
-      item.children = children
+      if (children.length > 0) {
+        item.children = children
+      }
     }
   })
   return arr
